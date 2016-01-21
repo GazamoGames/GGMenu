@@ -22,6 +22,8 @@ public abstract class MenuItem {
      * @param action The {@link MenuAction} called when a player clicks.
      * @return true if successful, false if not successful.
      */
-    public abstract boolean handleClick(Player player, MenuAction action);
+    public boolean handleClick(Player player, MenuAction action) {
+        return true;
+    }
 
 }
