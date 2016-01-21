@@ -85,5 +85,8 @@ public abstract class Menu implements Listener {
      * @param player The {@link Player} the inventory is going to be shown to.
      * @return the {@link Menu} instance.
      */
-    public abstract Menu open(Player player);
+    public Menu open(Player player) {
+        player.openInventory(this.getInventory());
+        return this;
+    }
 }
