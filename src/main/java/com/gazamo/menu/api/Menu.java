@@ -1,6 +1,9 @@
 package com.gazamo.menu.api;
 
+import com.gazamo.menu.api.item.MenuItem;
 import com.gazamo.menu.api.size.MenuSize;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -9,10 +12,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 /**
@@ -31,7 +36,8 @@ public abstract class Menu implements Listener {
     @Getter
     private BiConsumer<Player, Menu> closeConsumer;
 
-    //TODO: Store item array
+    @Getter
+    protected final Map<Integer, MenuItem> items = Maps.newHashMap();
 
     @Getter
     private final JavaPlugin holder = JavaPlugin.getProvidingPlugin(Menu.class);
@@ -50,24 +56,37 @@ public abstract class Menu implements Listener {
             //TODO: Handle multiple page menus?
 
             if (event.getPlayer() instanceof Player) {
-                this.getCloseConsumer().accept((Player) event.getPlayer(), this);
+                if (this.getCloseConsumer() != null) {
+                    this.getCloseConsumer().accept((Player) event.getPlayer(), this);
+                }
             }
         }
     }
 
     @EventHandler
     public void on(InventoryClickEvent event) {
+        if (!Objects.equals(event.getInventory(), inventory))
+            return;
+        int slot = event.getRawSlot();
+        if (slot >= this.getSize().getSize())
+            return;
 
-    }
+        Optional<MenuItem> item = this.getItemAt(slot);
 
-    @EventHandler
-    public void on(InventoryMoveItemEvent event) {
-
+        if (item.isPresent()) {
+            MenuAction action = new MenuAction(event.getClick(), this, slot);
+            boolean cancel = item.get().handleClick((Player) event.getWhoClicked(), action);
+            event.setCancelled(cancel);
+        }
     }
 
     @EventHandler
     public void on(InventoryDragEvent event) {
+        if (!Objects.equals(event.getInventory(), inventory))
+            return;
 
+        event.setCancelled(true);
+        //TODO: Figure out how to handle this properly.
     }
 
     /**
@@ -88,5 +107,28 @@ public abstract class Menu implements Listener {
     public Menu open(Player player) {
         player.openInventory(this.getInventory());
         return this;
+    }
+
+    /**
+     * Sets an item in the menu to be show to the player.
+     * @param index The slot where the item is going to be set at
+     * @param item  The item going to be set.
+     * @return the {@link Menu} instance.
+     */
+    public Menu setItem(int index, MenuItem item) {
+        Preconditions.checkArgument(index < 0, "index has to be greater than 0");
+
+        this.getInventory().setItem(index, (item == null ? null : item.getItem()));
+        this.getItems().put(index, item);
+        return this;
+    }
+
+    /**
+     * Easier way of checking if menu contains a certain item.
+     * @param index slot we're analyzing to see if there's an item.
+     * @return {@link Optional} instance, might be a nulled optional.
+     */
+    public Optional<MenuItem> getItemAt(int index) {
+        return Optional.ofNullable(this.getItems().get(index));
     }
 }

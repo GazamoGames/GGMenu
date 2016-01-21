@@ -1,7 +1,7 @@
 package com.gazamo.menu.api;
 
-import com.gazamo.menu.api.item.ClickType;
 import lombok.Data;
+import org.bukkit.event.inventory.ClickType;
 
 /**
  * @author Erik Rosemberg
