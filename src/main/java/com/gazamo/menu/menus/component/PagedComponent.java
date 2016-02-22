@@ -40,16 +40,21 @@ public class PagedComponent extends MenuComponent {
         if (prev < 0) {
             prev += this.pages.size();
         }
-        this.pageByPlayer.put(player, prev);
         showPage(player, prev);
     }
 
     public void showPage(Player player, int page) {
+        this.pageByPlayer.put(player, page);
         ItemStack[][] pageData = this.pages.get(page);
         for (int y = 0; y < pageData.length; y++) {
             for (int x = 0; x < pageData[y].length; x++) {
                 setItem(player, x, y, pageData[y][x]);
             }
         }
+    }
+
+    @Override
+    public void onOpen(Player player) {
+        showPage(player, 0);
     }
 }

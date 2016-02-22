@@ -18,9 +18,7 @@ import java.util.function.Supplier;
 /**
  * @author GazamoGames Development Team.
  */
-public class MenuComponent implements Component
-{
-
+public abstract class MenuComponent implements Component {
     private static class ClickAction {
 
         private static final ClickAction NONE = new ClickAction(null, ClickType.DROP) {
