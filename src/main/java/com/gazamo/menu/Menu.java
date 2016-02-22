@@ -42,7 +42,7 @@ public abstract class Menu implements Listener, Container {
 
     private int width;
 
-    public Menu(String name, int rows, int columns) {
+    protected Menu(String name, int rows, int columns) {
         this.height = rows;
         this.width = columns;
         this.name = name;
