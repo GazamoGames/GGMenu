@@ -48,6 +48,8 @@ public class ScrollingComponent extends MenuComponent {
 
     private final List<ItemStack[]> items;
 
+    private final int sliceLength;
+
     private final Map<Player, Integer> offset;
 
     private final boolean wrap;
@@ -60,8 +62,18 @@ public class ScrollingComponent extends MenuComponent {
         super(width, height);
         this.mode = mode;
         this.items = Lists.newArrayList();
+        this.sliceLength = this.mode == ScrollMode.HORIZONTAL ? getHeight() : getWidth();
         this.offset = createPlayerMap(Maps::<Player, Integer>newHashMap);
         this.wrap = wrap;
+    }
+
+    public void setItem(int x, int y, ItemStack stack) {
+        int slice = this.mode == ScrollMode.HORIZONTAL ? x : y;
+        int index = this.mode == ScrollMode.HORIZONTAL ? y : x;
+        while (slice >= this.items.size()) {
+            this.items.add(new ItemStack[this.sliceLength]);
+        }
+        this.items.get(slice)[index] = stack;
     }
 
     public void scroll(Player player, int steps) {
@@ -75,5 +87,4 @@ public class ScrollingComponent extends MenuComponent {
             this.mode.apply(player, this, i, this.items.get((cursor + i) % this.items.size()));
         }
     }
-
 }
