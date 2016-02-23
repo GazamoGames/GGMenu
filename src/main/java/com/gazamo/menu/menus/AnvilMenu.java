@@ -27,6 +27,18 @@ public class AnvilMenu extends Menu {
         return Bukkit.createInventory(player, InventoryType.ANVIL, this.getName());
     }
 
+    @Override
+    protected void onOpen(Player player) {
+        super.onOpen(player);
+        this.listener.register(player, this);
+    }
+
+    @Override
+    protected void onClose(Player player) {
+        super.onClose(player);
+        this.listener.unregister(player, this);
+    }
+
     public void acceptInput(String input) {
         this.input = input != null ? input : "";
     }

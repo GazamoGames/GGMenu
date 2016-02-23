@@ -216,11 +216,17 @@ public abstract class Menu implements Listener, Container {
      * @param player The {@link Player} the inventory is going to be shown to.
      * @return the {@link Menu} instance.
      */
-    public Menu open(Player player) {
+    public final Menu open(Player player) {
         setMenu(player, this);
         player.openInventory(getInventory(player));
         this.components.keySet().forEach(component -> component.onOpen(player));
         return this;
+    }
+
+    protected void onOpen(Player player) {
+    }
+
+    protected void onClose(Player player) {
     }
 
     protected boolean hasOpen(Player player) {
