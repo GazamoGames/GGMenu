@@ -1,7 +1,8 @@
 package com.gazamo.menu.menus;
 
 import com.gazamo.menu.Menu;
-import com.gazamo.menu.PacketRecipient;
+import com.gazamo.menu.api.packet.AnvilInputProvider;
+import com.google.common.base.Preconditions;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
@@ -10,12 +11,15 @@ import org.bukkit.inventory.Inventory;
 /**
  * @author DarkSeraphim.
  */
-public class AnvilMenu extends Menu implements PacketRecipient {
+public class AnvilMenu extends Menu {
 
     private String input = "";
 
-    public AnvilMenu(String name) {
+    private AnvilInputProvider listener;
+
+    private AnvilMenu(String name, AnvilInputProvider listener) {
         super(name, 1, 3);
+        this.listener = listener;
     }
 
     @Override
@@ -23,12 +27,18 @@ public class AnvilMenu extends Menu implements PacketRecipient {
         return Bukkit.createInventory(player, InventoryType.ANVIL, this.getName());
     }
 
-    @Override
-    public void onAnvilNameChange(String input) {
+    public void acceptInput(String input) {
         this.input = input != null ? input : "";
     }
 
     public String getInput() {
         return this.input;
     }
+
+    public static AnvilMenu create(String name) {
+        AnvilInputProvider listener = AnvilInputProvider.getProvider();
+        Preconditions.checkNotNull(listener, "No PacketHandler found. We are unable to detect anvil input.");
+        return new AnvilMenu(name, listener);
+    }
+
 }
