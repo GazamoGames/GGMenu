@@ -43,12 +43,13 @@ public abstract class Menu implements Listener, Container {
     private int width;
 
     protected Menu(String name, int rows, int columns) {
-        this.height = rows;
-        this.width = columns;
         this.name = name;
+        this.closeConsumer = (player, menu) -> {};
         this.byPlayer = Maps.newHashMap();
         this.components = new HashMap<>();
         this.bySlot = new Component[getHeight()][getWidth()];
+        this.height = rows;
+        this.width = columns;
         getHolder().getServer().getPluginManager().registerEvents(this, getHolder());
     }
 
