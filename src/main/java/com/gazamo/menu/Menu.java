@@ -3,7 +3,6 @@ package com.gazamo.menu;
 import com.gazamo.menu.api.Component;
 import com.gazamo.menu.api.Container;
 import com.google.common.collect.Maps;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -252,7 +251,7 @@ public abstract class Menu implements Listener, Container {
 
     protected static void closeMenu(Player player, Menu menu) {
         boolean same = getMenu(player).map(menu::equals).orElse(false);
-        if (same) {
+        if (!same) {
             player.removeMetadata(MENU_KEY, getHolder());
         }
     }
