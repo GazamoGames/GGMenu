@@ -214,7 +214,11 @@ public abstract class Menu implements Listener, Container {
     public Optional<ItemStack> getItem(Player player, Component component, int x, int y) {
         Position position = this.components.get(component);
         int slot = Position.toSlot(this, position.x + x, position.y * y);
-        return Optional.ofNullable(getInventory(player).getItem(slot)).filter(stack -> stack.getType() != Material.AIR);
+        Inventory inv = getInventory(player);
+        if (slot < 0 || slot > inv.getSize()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(inv.getItem(slot)).filter(stack -> stack.getType() != Material.AIR);
     }
 
     /**
