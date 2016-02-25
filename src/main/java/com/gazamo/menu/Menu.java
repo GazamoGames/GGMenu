@@ -303,10 +303,9 @@ public abstract class Menu implements Listener, Container {
         public static Position toPosition(Menu menu, int slot) {
             Bukkit.broadcastMessage("Slot: " + slot);
             Bukkit.broadcastMessage("Width: " + menu.getWidth());
-            Bukkit.broadcastMessage("Height: " + menu.getHeight());
             Bukkit.broadcastMessage("x: " + (slot % menu.getWidth()));
-            Bukkit.broadcastMessage("y: " + (slot / menu.getHeight()));
-            return new Position(slot % menu.getWidth(), slot / menu.getHeight());
+            Bukkit.broadcastMessage("y: " + (slot / menu.getWidth()));
+            return new Position(slot % menu.getWidth(), slot / menu.getWidth());
         }
     }
 }
