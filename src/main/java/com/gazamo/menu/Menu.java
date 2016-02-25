@@ -3,6 +3,7 @@ package com.gazamo.menu;
 import com.gazamo.menu.api.Component;
 import com.gazamo.menu.api.Container;
 import com.google.common.collect.Maps;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -160,7 +161,7 @@ public abstract class Menu implements Listener, Container {
                 Position pos = this.components.get(component);
                 player.sendMessage("Position of component: " + pos);
                 Position xy = Position.toPosition(this, slot);
-                player.sendRawMessage("Position of slot: " + pos);
+                player.sendRawMessage("Position of slot: " + xy);
                 component.onClick(player, event.getClick(), xy.x - pos.x, xy.y - pos.y);
             });
 
@@ -291,6 +292,11 @@ public abstract class Menu implements Listener, Container {
         }
 
         public static Position toPosition(Menu menu, int slot) {
+            Bukkit.broadcastMessage("Slot: " + slot);
+            Bukkit.broadcastMessage("Width: " + menu.getWidth());
+            Bukkit.broadcastMessage("Height: " + menu.getHeight());
+            Bukkit.broadcastMessage("x: " + (slot % menu.getWidth()));
+            Bukkit.broadcastMessage("y: " + (slot / menu.getHeight()));
             return new Position(slot % menu.getWidth(), slot / menu.getHeight());
         }
     }
