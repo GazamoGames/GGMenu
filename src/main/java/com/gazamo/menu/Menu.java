@@ -47,9 +47,9 @@ public abstract class Menu implements Listener, Container {
         this.closeConsumer = (player, menu) -> {};
         this.byPlayer = Maps.newHashMap();
         this.components = new HashMap<>();
-        this.bySlot = new Component[getHeight()][getWidth()];
         this.height = rows;
         this.width = columns;
+        this.bySlot = new Component[getHeight()][getWidth()];
         getHolder().getServer().getPluginManager().registerEvents(this, getHolder());
     }
 
