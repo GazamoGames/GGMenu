@@ -150,13 +150,17 @@ public abstract class Menu implements Listener, Container {
         }
         Player player = (Player) event.getWhoClicked();
         if (this.hasOpen(player)) {
-            int slot = event.getRawSlot();
+            int slot = event.getSlot();
             if (slot >= this.getSize())
                 return;
 
+            player.sendMessage("Component present: " + getComponent(slot).isPresent());
+
             getComponent(slot).ifPresent(component -> {
                 Position pos = this.components.get(component);
+                player.sendMessage("Position of component: " + pos);
                 Position xy = Position.toPosition(this, slot);
+                player.sendRawMessage("Position of slot: " + pos);
                 component.onClick(player, event.getClick(), xy.x - pos.x, xy.y - pos.y);
             });
 
@@ -279,6 +283,11 @@ public abstract class Menu implements Listener, Container {
 
         public static int toSlot(Menu menu, Position position) {
             return toSlot(menu, position.x, position.y);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("[%d,%d]", this.x, this.y);
         }
 
         public static Position toPosition(Menu menu, int slot) {
