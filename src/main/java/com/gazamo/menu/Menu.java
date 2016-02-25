@@ -72,7 +72,7 @@ public abstract class Menu implements Listener, Container {
         }
         int x = where.x;
         int y = where.y;
-        for (int j = y; j < y + component.getHeight(); y++) {
+        for (int j = y; j < y + component.getHeight(); j++) {
             for (int i = x; i < x + component.getWidth(); i++) {
                 this.bySlot[j][i] = what;
             }
@@ -90,7 +90,7 @@ public abstract class Menu implements Listener, Container {
             getHolder().getLogger().info("Duplicate component registry in " + getName());
             return false;
         }
-        for (int j = y; j < y + component.getHeight(); y++) {
+        for (int j = y; j < y + component.getHeight(); j++) {
             for (int i = x; i < x + component.getWidth(); i++) {
                 if (bySlot[j][i] != null) {
                     getHolder().getLogger().info("Component cannot be registered due to overlap" + getName());
