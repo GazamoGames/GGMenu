@@ -156,8 +156,6 @@ public abstract class Menu implements Listener, Container {
             if (slot >= this.getSize())
                 return;
 
-            player.sendMessage("Component present: " + getComponent(slot).isPresent());
-
             getComponent(slot).ifPresent(component -> {
                 Position pos = this.components.get(component);
                 player.sendMessage("Position of component: " + pos);
@@ -214,7 +212,7 @@ public abstract class Menu implements Listener, Container {
     @Override
     public Optional<ItemStack> getItem(Player player, Component component, int x, int y) {
         Position position = this.components.get(component);
-        int slot = Position.toSlot(this, position.x + x, position.y * y);
+        int slot = Position.toSlot(this, position.x + x, position.y + y);
         Inventory inv = getInventory(player);
         if (slot < 0 || slot > inv.getSize()) {
             return Optional.empty();
@@ -301,10 +299,6 @@ public abstract class Menu implements Listener, Container {
         }
 
         public static Position toPosition(Menu menu, int slot) {
-            Bukkit.broadcastMessage("Slot: " + slot);
-            Bukkit.broadcastMessage("Width: " + menu.getWidth());
-            Bukkit.broadcastMessage("x: " + (slot % menu.getWidth()));
-            Bukkit.broadcastMessage("y: " + (slot / menu.getWidth()));
             return new Position(slot % menu.getWidth(), slot / menu.getWidth());
         }
     }
