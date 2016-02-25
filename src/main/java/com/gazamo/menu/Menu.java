@@ -141,6 +141,7 @@ public abstract class Menu implements Listener, Container {
         if (this.hasOpen(player)) {
             this.components.keySet().forEach(component -> component.onOpen(player));
             this.getCloseConsumer().accept(player, this);
+            Menu.closeMenu(player);
         }
     }
 
@@ -249,6 +250,10 @@ public abstract class Menu implements Listener, Container {
                 .map(MetadataValue::value)
                 .filter(Menu.class::isInstance).map(Menu.class::cast)
                 .findFirst();
+    }
+
+    protected static void closeMenu(Player player) {
+        player.removeMetadata(MENU_KEY, getHolder());
     }
 
     protected static void setMenu(Player player, Menu menu) {
