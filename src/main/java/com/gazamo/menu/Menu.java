@@ -164,9 +164,7 @@ public abstract class Menu implements Listener, Container {
 
             getComponent(slot).ifPresent(component -> {
                 Position pos = this.components.get(component);
-                player.sendMessage("Position of component: " + pos);
                 Position xy = Position.toPosition(this, slot);
-                player.sendRawMessage("Position of slot: " + xy);
                 component.onClick(player, event.getClick(), xy.x - pos.x, xy.y - pos.y);
             });
 
