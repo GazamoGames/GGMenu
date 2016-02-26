@@ -109,7 +109,14 @@ public abstract class Menu implements Listener, Container {
     }
 
     public Optional<Component> getComponent(int x, int y) {
-        return Optional.ofNullable(this.bySlot[y][x]);
+        if (y < 0 || y >= this.bySlot.length) {
+            return Optional.empty();
+        }
+        Component[] row =  this.bySlot[y];
+        if (x < 0 || x >= row.length) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(row[x]);
     }
 
     @Override
