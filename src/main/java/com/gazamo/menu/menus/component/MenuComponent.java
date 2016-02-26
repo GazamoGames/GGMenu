@@ -80,9 +80,6 @@ public abstract class MenuComponent implements Component {
 
     @Override
     public void onClick(Player player, ClickType click, int x, int y) {
-        player.sendMessage("MenuComponent#onClick was reached");
-        player.sendMessage("Item was " + getParent().getItem(player, this, x, y).map(ItemStack::getType).map(Enum::name).orElse("null"));
-        player.sendMessage("ClickType was " + click.name());
         getParent().getItem(player, this, x, y)
                    .map(this.actions::get).filter(Objects::nonNull)
                    .filter(action -> action.shouldAct(click)).ifPresent(action -> action.act(player));
