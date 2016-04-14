@@ -158,7 +158,7 @@ public abstract class Menu implements Listener, Container {
     }
 
     @EventHandler
-    private void on(InventoryCloseEvent event) {
+    public void on(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player)) {
             return;
         }
@@ -177,7 +177,7 @@ public abstract class Menu implements Listener, Container {
     }
 
     @EventHandler
-    private void on(InventoryClickEvent event) {
+    public void on(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) {
             return;
         }
@@ -198,7 +198,7 @@ public abstract class Menu implements Listener, Container {
     }
 
     @EventHandler
-    private void on(InventoryDragEvent event) {
+    public void on(InventoryDragEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) {
             return;
         }
