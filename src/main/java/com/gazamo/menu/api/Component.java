@@ -22,6 +22,8 @@ public interface Component {
     default void onOpen(Player player) {
     }
 
+    void draw(Player player);
+
     default void onClose(Player player) {
     }
 

@@ -17,6 +17,6 @@ public class HopperMenu extends Menu {
 
     @Override
     protected Inventory createInventory(Player player) {
-        return Bukkit.createInventory(player, InventoryType.HOPPER, getName());
+        return Bukkit.createInventory(player, InventoryType.HOPPER, getName(player));
     }
 }

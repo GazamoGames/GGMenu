@@ -16,6 +16,6 @@ public class ChestMenu extends Menu {
 
     @Override
     protected Inventory createInventory(Player player) {
-        return Bukkit.createInventory(player, this.getSize(), this.getName());
+        return Bukkit.createInventory(player, this.getSize(), this.getName(player));
     }
 }

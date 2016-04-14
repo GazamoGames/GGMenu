@@ -11,6 +11,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
@@ -21,6 +22,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.logging.Level;
 
 /**
  * @author GazamoGames Development Team.
@@ -28,11 +31,15 @@ import java.util.function.BiConsumer;
 public abstract class Menu implements Listener, Container {
     private static final String MENU_KEY = "GGMENU:Menu";
 
-    private final String name;
+    private String defaultName;
 
     private BiConsumer<Player, Menu> closeConsumer;
 
+    private BiConsumer<Player, Menu> openConsumer;
+
     private final Map<Player, Inventory> byPlayer;
+
+    private Function<Player, String> nameProvider;
 
     private Map<Component, Position> components;
 
@@ -42,9 +49,13 @@ public abstract class Menu implements Listener, Container {
 
     private int width;
 
+    private boolean nameSwitch;
+
     protected Menu(String name, int rows, int columns) {
-        this.name = name;
+        this.defaultName = name;
         this.closeConsumer = (player, menu) -> {};
+        this.openConsumer = (player, menu) -> {};
+        this.nameProvider = player -> null;
         this.byPlayer = Maps.newHashMap();
         this.components = new HashMap<>();
         this.height = rows;
@@ -61,6 +72,14 @@ public abstract class Menu implements Listener, Container {
     @Override
     public final int getHeight() {
         return this.height;
+    }
+
+    public boolean isNameSwitch() {
+        return nameSwitch;
+    }
+
+    public void setNameProvider(Function<Player, String> provider) {
+        this.nameProvider = provider != null ? provider : player -> null;
     }
 
     private void fill(Component component, Position where) {
@@ -87,13 +106,13 @@ public abstract class Menu implements Listener, Container {
             if (!Objects.equals(old, in)) {
                 this.components.put(component, old);
             }
-            getHolder().getLogger().info("Duplicate component registry in " + getName());
+            getHolder().getLogger().info("Duplicate component registry in " + getDefaultName());
             return false;
         }
         for (int j = y; j < y + component.getHeight(); j++) {
             for (int i = x; i < x + component.getWidth(); i++) {
                 if (bySlot[j][i] != null) {
-                    getHolder().getLogger().info("Component cannot be registered due to overlap" + getName());
+                    getHolder().getLogger().info("Component cannot be registered due to overlap" + getDefaultName());
                     this.components.remove(component);
                     return false; // Nope
                 }
@@ -105,7 +124,7 @@ public abstract class Menu implements Listener, Container {
     }
 
     public Optional<Component> getComponent(int slot) {
-        return getComponent(slot % getHeight(), slot / getWidth());
+        return getComponent(slot % getWidth(), slot / getWidth());
     }
 
     public Optional<Component> getComponent(int x, int y) {
@@ -139,41 +158,47 @@ public abstract class Menu implements Listener, Container {
     }
 
     @EventHandler
-    public void on(InventoryCloseEvent event) {
+    private void on(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player)) {
             return;
         }
         Player player = (Player) event.getPlayer();
-        if (this.hasOpen(player)) {
-            this.components.keySet().forEach(component -> component.onOpen(player));
-            this.getCloseConsumer().accept(player, this);
+        if (!this.nameSwitch && this.hasOpen(player)) {
+            this.components.keySet().forEach(component -> {
+                try {
+                    component.onClose(player);
+                } catch (Throwable t) {
+                    getHolder().getLogger().log(Level.WARNING, "An exception was caught whilst handling a component", t);
+                }
+            });
+            this.onClose(player);
             Menu.closeMenu(player, this);
         }
     }
 
     @EventHandler
-    public void on(InventoryClickEvent event) {
+    private void on(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) {
             return;
         }
         Player player = (Player) event.getWhoClicked();
         if (this.hasOpen(player)) {
             int slot = event.getSlot();
-            if (slot >= this.getSize())
+            if (slot >= this.getSize()) {
                 return;
+            }
 
+            event.setCancelled(true);
             getComponent(slot).ifPresent(component -> {
                 Position pos = this.components.get(component);
                 Position xy = Position.toPosition(this, slot);
                 component.onClick(player, event.getClick(), xy.x - pos.x, xy.y - pos.y);
             });
-
-            event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void on(InventoryDragEvent event) {
+    private void on(InventoryDragEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) {
             return;
         }
@@ -195,12 +220,20 @@ public abstract class Menu implements Listener, Container {
         return getWidth() * getHeight();
     }
 
-    public String getName() {
-        return this.name;
+    public String getDefaultName() {
+        return this.defaultName;
+    }
+
+    public String getName(Player player) {
+        String name = this.nameProvider.apply(player);
+        return name != null ? name : getDefaultName();
     }
 
     public BiConsumer<Player, Menu> getCloseConsumer() {
         return closeConsumer;
+    }
+    public BiConsumer<Player, Menu> getOpenConsumer() {
+        return openConsumer;
     }
 
     /**
@@ -210,6 +243,11 @@ public abstract class Menu implements Listener, Container {
      */
     public Menu onClose(BiConsumer<Player, Menu> consumer) {
         this.closeConsumer = consumer != null ? consumer : (player, menu) -> {};
+        return this;
+    }
+
+    public Menu onOpen(BiConsumer<Player, Menu> consumer) {
+        this.openConsumer = consumer != null ? consumer : (player, menu) -> {};
         return this;
     }
 
@@ -230,20 +268,57 @@ public abstract class Menu implements Listener, Container {
      * @return the {@link Menu} instance.
      */
     public final Menu open(Player player) {
+        if (this.hasOpen(player)) {
+            // Nope
+            return this;
+        }
+        InventoryView view = player.openInventory(getInventory(player));
+        if (!view.getTopInventory().equals(getInventory(player))) {
+            throw new IllegalStateException("Failed to open inventory (was the InventoryOpenEvent cancelled?)");
+        }
         setMenu(player, this);
-        player.openInventory(getInventory(player));
-        this.components.keySet().forEach(component -> component.onOpen(player));
+        this.onOpen(player);
+        this.components.keySet().forEach(component -> {
+            component.onOpen(player);
+            component.draw(player);
+        });
         return this;
     }
 
+    public void refresh(Player player) {
+        if (!this.hasOpen(player)) {
+            return;
+        }
+        if (!this.nameProvider.apply(player).equals(getInventory(player).getTitle())) {
+            this.byPlayer.remove(player);
+            this.nameSwitch = true;
+            InventoryView view = player.openInventory(getInventory(player));
+            if (!view.getTopInventory().equals(getInventory(player))) {
+                throw new IllegalStateException("Failed to open inventory (was the InventoryOpenEvent cancelled?)");
+            }
+            this.nameSwitch = false;
+        }
+        this.components.keySet().forEach(component -> {
+            component.onOpen(player);
+            component.draw(player);
+        });
+    }
+
     protected void onOpen(Player player) {
+        this.openConsumer.accept(player, this);
     }
 
     protected void onClose(Player player) {
+        this.closeConsumer.accept(player, this);
+        this.byPlayer.remove(player);
     }
 
-    protected boolean hasOpen(Player player) {
+    public boolean hasOpen(Player player) {
         return getMenu(player).filter(this::equals).isPresent();
+    }
+
+    public static boolean hasAnyMenu(Player player) {
+        return getMenu(player).isPresent();
     }
 
     protected static Optional<Menu> getMenu(Player player) {
@@ -256,7 +331,7 @@ public abstract class Menu implements Listener, Container {
 
     protected static void closeMenu(Player player, Menu menu) {
         boolean same = getMenu(player).map(menu::equals).orElse(false);
-        if (!same) {
+        if (same) {
             player.removeMetadata(MENU_KEY, getHolder());
         }
     }
@@ -275,6 +350,14 @@ public abstract class Menu implements Listener, Container {
         private Position(int x, int y) {
             this.x = x;
             this.y = y;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getY() {
+            return y;
         }
 
         @Override

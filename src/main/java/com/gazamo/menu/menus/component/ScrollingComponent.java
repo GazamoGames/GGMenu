@@ -87,4 +87,9 @@ public class ScrollingComponent extends MenuComponent {
             this.mode.apply(player, this, i, this.items.get((cursor + i) % this.items.size()));
         }
     }
+
+    @Override
+    public void draw(Player player) {
+        scroll(player, 0);
+    }
 }

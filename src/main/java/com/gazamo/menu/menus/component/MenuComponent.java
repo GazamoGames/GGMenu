@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,8 +20,50 @@ import java.util.function.Supplier;
  * @author GazamoGames Development Team.
  */
 public abstract class MenuComponent implements Component {
-    private static class ClickAction {
 
+    @FunctionalInterface
+    public interface ClickHandler {
+        boolean handle(Player player, ClickType type, int x, int y);
+    }
+
+    private static class ItemStackKey {
+
+        private final Object[] keys;
+
+        private ItemStackKey(ItemStack stack) {
+            if (!stack.hasItemMeta()) {
+                this.keys = new Object[]{stack.getType(), stack.getDurability()};
+            } else {
+                ItemMeta meta = stack.getItemMeta();
+                this.keys = new Object[]{stack.getType(), stack.getDurability(), meta.getDisplayName()};
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.keys);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof ItemStackKey && Objects.deepEquals(this.keys, ((ItemStackKey) obj).keys);
+        }
+
+        @Override
+        public String toString() {
+            if (keys.length == 2) {
+                return String.format("%s:%d", keys);
+            } else {
+                return String.format("%s:%d - %s", keys);
+            }
+        }
+
+        public static ItemStackKey of(ItemStack stack) {
+            return new ItemStackKey(stack);
+        }
+    }
+
+    private static class ClickAction {
         private static final ClickAction NONE = new ClickAction(null, ClickType.DROP) {
             @Override
             boolean shouldAct(ClickType clickType) {
@@ -49,11 +92,13 @@ public abstract class MenuComponent implements Component {
 
     private Container parent;
 
-    private final Map<ItemStack, ClickAction> actions;
+    private final Map<ItemStackKey, ClickAction> actions;
 
     private int width;
 
     private int height;
+
+    private ClickHandler clickHandler;
 
     private Collection<Consumer<Player>> cleanupTasks;
 
@@ -75,19 +120,32 @@ public abstract class MenuComponent implements Component {
     }
 
     public void addAction(ItemStack stack, Consumer<Player> action, ClickType type, ClickType... moreTypes) {
-        this.actions.put(stack, new ClickAction(action, type, moreTypes));
+        this.actions.put(ItemStackKey.of(stack), new ClickAction(action, type, moreTypes));
     }
 
     @Override
     public void onClick(Player player, ClickType click, int x, int y) {
+        if (this.clickHandler != null && !this.clickHandler.handle(player, click, x, y)) {
+            return;
+        }
         getParent().getItem(player, this, x, y)
+                   .map(ItemStackKey::of)
                    .map(this.actions::get).filter(Objects::nonNull)
                    .filter(action -> action.shouldAct(click)).ifPresent(action -> action.act(player));
     }
 
+    public void onClick(ClickHandler handler) {
+        this.clickHandler = handler;
+    }
+
+    @Override
+    public void draw(Player player) {
+
+    }
+
     @Override
     public final void onClose(Player player) {
-
+        this.onClosure(player);
     }
 
     public void onClosure(Player player){
